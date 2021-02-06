@@ -1,0 +1,48 @@
+1. Create 2+ ​existence​ assertions. Example, “Every record has a date field”.
+- Every record has a CRASH_ID.
+- Every record has a field or set of fields that can be used to compose the crash date.
++ No 'crash' type records have a vehicle id.
++ All 'crash' type records have serial numbers.
+
+
+2. Create 2+ ​limit​ assertions. The values of most numeric fields should fall within a
+valid range. Example: “the date field should be between 1/1/2019 and
+12/31/2019 inclusive”
+- The HWY_NO field will be no more than 3 characters.
+- The AGE_VAL will be a two character field.
++ The Crash Month value ( when present ) will be between 1-12
++ If the 'marijuana used' field is available it will be between 0-3 || 9.
+
+
+3. Create 2+ ​intra-record check​ assertions.
+- The VHCL_OCCUP_CNT will be > 0.
+- The record has a crash date, month, and year that should match the CRASH_DT field.
++ The alcohol involved flag will either be blank | 0 | 1 | 9
++ Vehicle records will have a hit & run flag value of either 0 | 1
+
+
+4. Create 2+ ​inter-record check​ assertions.
+- Every CRASH_ID has an associated SER_NO.
+- Every VHCL_ID is associated with one or more CRASH_IDs
++ All the participant records will have a participant ID
++ All the crash records will have a light condition value between 0-5
+
+5. Create 2+ ​summary​ assertions. Example: “every crash has a unique ID”
+- Every record has a unique VHCL_ID value
+- Every record has a CMPSS_DIR_FROM_CD which is one of N|S|E|W
++ Every crash record has a weather condition value between 0-9
++ Every vehicle record has a vehicle ownership value between 0-9
+
+6. Create 2+ referential integrity insertions. Example “every crash participant has a
+Crash ID of a known crash”
+- Every VHCL_ID has one or more associated CRASH_ID values. ! DUPLICATE of 4.2
+- Every record has a CNTY_NM ( county name ) that corresponds to a county in Oregon State. ! This field is not a column in the excel doc
++ Every crash record where the roundabout value is 1, will also have a off roadway value 1
++ Every crash record that has an intersection related value of 1, will also have an intersection type value ( non-blank )
+
+7. Create 2+ ​statistical distribution assertions.​ Example: “crashes are
+evenly/uniformly distributed throughout the year.”
+- Crashes are less prevalent during the middle of the week (e.g. Tue-Thur)
+- The distribution of crashes will be skewed towards the end/beginning of the calendar year.
++ Light conditions for crashes will skew towards non-daylight ( 2-3 )
++ Road surface conditions for crashes will skew towards non-dry surfaces ( 2-4 )
