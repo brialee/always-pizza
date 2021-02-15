@@ -17,6 +17,7 @@ def sensor_data_from_file(filename):
             sensor_json = json.load(inFile)
     except Exception as e:
         print("Failed to read sensor data from " + filename)
+        print(str(e))
         return None
 
     if not sensor_json or sensor_json == '':
@@ -50,14 +51,14 @@ def sensor_data_from_uri(uri, filename=None):
 # Publish one or more records to the topic
 # read from 
 def publish_records(producer, records, record_key):
-    for record in records[94507:]:
+    for record in records:
         record_key = record_key
         record_value = json.dumps(record)
         producer.produce(topic, key=record_key, value=record_value, on_delivery=acked)
-        producer.poll(.01)
+        producer.poll(.005)
 
         # global delivered_records
-        # if delivered_records % 50 == 0:
+        # if delivered_records % 10 == 0:
         #     producer.flush()
 
     producer.flush()
@@ -104,7 +105,7 @@ if __name__ == "__main__":
     ccloud_lib.create_topic(conf, topic)
 
 
-    json_data = sensor_data_from_file('sensor_data/2021-01-16.json')
+    json_data = sensor_data_from_file('sensor_data/2021-01-31.json')
     if json_data:
         publish_records(producer, json_data, 'sensor-data-record')
     

@@ -31,6 +31,7 @@ if __name__ == '__main__':
     # Process messages
     total_count = 0
     count = 0
+    message_data = []
     try:
         while True:
             msg = consumer.poll(1.0)
@@ -48,6 +49,7 @@ if __name__ == '__main__':
                 record_key = msg.key()
                 record_value = msg.value()
                 data = json.loads(record_value)
+                message_data.append(data)
                 count =+ 1
                 total_count += count
                 print("Consumed record with key {} and value {}, \
@@ -58,3 +60,6 @@ if __name__ == '__main__':
     finally:
         # Leave group and commit final offsets
         consumer.close()
+
+        with open(topic + '.json', 'w') as outFile:
+            json.dump(message_data, outFile)
