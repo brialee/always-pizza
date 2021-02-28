@@ -49,18 +49,16 @@ def validate_direction(data):
 def validate_if_empty_get_zero(data):
     if data == "":
         return "0"
+    else:
+        return data
 
 
 def validate_data(sensor_data):
     for trip_id, recs in sensor_data.items():
         for rec in recs:
-            rec['DIRECTION'] = validate_direction(rec['DIRECTION'])
-            rec['GPS_LONGITUDE'] = validate_long(rec['GPS_LONGITUDE'])
-            rec['GPS_LATITUDE'] = validate_lat(rec['GPS_LATITUDE'])
             rec['ACT_TIME'] = validate_time(rec['ACT_TIME'])
             rec['GPS_HDOP'] = validate_if_empty_get_zero(rec['GPS_HDOP'])
             rec['SCHEDULE_DEVIATION'] = validate_if_empty_get_zero(rec['SCHEDULE_DEVIATION'])
-            rec['VELOCITY'] = validate_if_empty_get_zero(rec['VELOCITY'])
             rec['METERS'] = validate_if_empty_get_zero(rec['METERS'])
             rec['RADIO_QUALITY'] = validate_if_empty_get_zero(rec['RADIO_QUALITY'])
             rec['GPS_SATELLITES'] = validate_if_empty_get_zero(rec['GPS_SATELLITES'])
@@ -98,30 +96,10 @@ def data_tuples_from_dict(sensor_dict):
 
         crumbs = []
         for rec in recs:
-            lat = None
-            if rec['GPS_LATITUDE'] == '':
-                lat = 0
-            else:
-                lat = rec['GPS_LATITUDE']
-
-            longitude = None
-            if rec['GPS_LONGITUDE'] == '':
-                longitude = 0
-            else:
-                longitude = rec['GPS_LONGITUDE']
-
-            direction = None
-            if rec['DIRECTION'] == '':
-                direction = 0
-            else:
-                direction = rec['DIRECTION']
-
-            velocity = None
-            if rec['VELOCITY'] == '':
-                velocity = 0
-            else:
-                velocity = rec['VELOCITY']
-
+            longitude = validate_long(rec['GPS_LONGITUDE'])
+            lat = validate_lat(rec['GPS_LATITUDE'])
+            direction = validate_direction(rec['DIRECTION'])
+            velocity = validate_if_empty_get_zero(rec['VELOCITY'])
 
             crumb = (
                     get_timestamp(rec['OPD_DATE'],rec['ACT_TIME']),
@@ -147,12 +125,18 @@ def send_to_db(trip_table_data, breadcrumb_table_data):
 
     cur = conn.cursor()
     statement = "insert into trip (trip_id, vehicle_id) VALUES (%s, %s);"
-    psycopg2.extras.execute_batch(cur, statement, trip_table_data)
-    print("Trip table updated: " + str(len(trip_table_data)))
+    try:
+        psycopg2.extras.execute_batch(cur, statement, trip_table_data)
+        print("Trip table updated: " + str(len(trip_table_data)))
+    except Exception as e:
+        print("Exception in Trip batch insert: " + str(e))
 
     statement = "insert into breadcrumb values (%s,%s,%s,%s,%s,%s);"
-    psycopg2.extras.execute_batch(cur, statement, breadcrumb_table_data)
-    print("Breadcrumb table updated: " + str(len(breadcrumb_table_data)))
+    try:
+        psycopg2.extras.execute_batch(cur, statement, breadcrumb_table_data)
+        print("Breadcrumb table updated: " + str(len(breadcrumb_table_data)))
+    except Exception as e:
+        print("Exception in breadcrumb batch insert: " + str(e))
     cur.close()
 
 
@@ -183,21 +167,24 @@ if __name__ == '__main__':
     # Process messages
     total_count = 0
     count = 0
+    failed_poll = 0
     message_data = []
     msg = True
     try:
         print("consuming data.....")
-        while msg is not None:
+        while failed_poll < 30:
             msg = consumer.poll(1.0)
             if msg is None:
                 # No message available within timeout.
                 # Initial message consumption may take up to
                 # `session.timeout.ms` for the consumer group to
                 # rebalance and start consuming
-                print("Waiting for message or event/error in poll()")
+                print("Waiting for message or event/error in poll(): " + str(failed_poll))
+                failed_poll += 1
                 continue
             elif msg.error():
                 print('error: {}'.format(msg.error()))
+                failed_poll += 1
             else:
                 # Check for Kafka message
                 record_key = msg.key()
@@ -206,17 +193,12 @@ if __name__ == '__main__':
                 message_data.append(data)
                 count =+ 1
                 total_count += count
-                #print("Consumed record with key {} and value {}, \
-                #      and updated total count to {}"
-                #      .format(record_key, record_value, total_count))
+                failed_poll = 0
     except KeyboardInterrupt:
         pass
     finally:
         # Leave group and commit final offsets
         consumer.close()
-
-        # with open(topic + '.json', 'w') as outFile:
-        #     json.dump(message_data, outFile)
 
     print("creating dict")
     data_dict = dict_from_sensor_data(message_data)
