@@ -50,7 +50,7 @@ def sensor_data_from_uri(uri, filename=None):
 # Publish one or more records to the topic
 # read from 
 def publish_records(producer, records, record_key):
-    for record in records[94507:]:
+    for record in records:
         record_key = record_key
         record_value = json.dumps(record)
         producer.produce(topic, key=record_key, value=record_value, on_delivery=acked)
@@ -102,7 +102,6 @@ if __name__ == "__main__":
 
     # Create topic if needed
     ccloud_lib.create_topic(conf, topic)
-
 
     json_data = sensor_data_from_uri(src_uri)
     if json_data:
