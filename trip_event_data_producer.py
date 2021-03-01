@@ -132,10 +132,10 @@ def transform_data(stop_data):
                 slim_data['vehicle_id'] = entry['vehicle_number']
 
                 # Convert to In/Out
-                if entry['direction'] == "1":
+                if entry['direction'] == "0":
                     slim_data['direction'] = "Out"
                 else:
-                    slim_data['direction'] = "In"
+                    slim_data['direction'] = "Back"
 
                 # Convert to Weekday,Saturday,Sunday
                 if entry['service_key'] == "W":
@@ -192,8 +192,10 @@ if __name__ == "__main__":
     ccloud_lib.create_topic(conf, topic)
 
     # HTML table to dict
-    d = event_data_to_dict(events_by_trip)
-    event_data = transform_data(d)
+    # d = event_data_to_dict(events_by_trip)
+    # event_data = transform_data(d)
+
+    event_data = event_data_from_file('2020-10-18-event-data.json')
 
     if event_data:
         publish_records(producer, event_data, 'event-data-record')

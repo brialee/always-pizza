@@ -35,10 +35,10 @@ else:
             slim_data['vehicle_id'] = entry['vehicle_number']
 
             # Convert to In/Out
-            if entry['direction'] == "1":
+            if entry['direction'] == "0":
                 slim_data['direction'] = "Out"
             else:
-                slim_data['direction'] = "In"
+                slim_data['direction'] = "Back"
 
             # Convert to Weekday,Saturday,Sunday
             if entry['service_key'] == "W":
