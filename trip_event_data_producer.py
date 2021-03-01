@@ -149,8 +149,6 @@ def transform_data(stop_data):
 
                 transformed.append(slim_data)
 
-    # with open(stop_date_text + "-event-data.json", 'w') as outFile:
-    #     json.dump(transformed, outFile)
     return transformed
 
 
@@ -192,10 +190,8 @@ if __name__ == "__main__":
     ccloud_lib.create_topic(conf, topic)
 
     # HTML table to dict
-    # d = event_data_to_dict(events_by_trip)
-    # event_data = transform_data(d)
-
-    event_data = event_data_from_file('2020-10-18-event-data.json')
+    d = event_data_to_dict(events_by_trip)
+    event_data = transform_data(d)
 
     if event_data:
         publish_records(producer, event_data, 'event-data-record')
